@@ -686,7 +686,7 @@ def run_mr_filter(filled_catimage, wmap, gawa_cfg):
     ] * float(gawa_cfg["map_resolution"])
     smin = int(round(math.log10(scale_min_pix) / math.log10(2.0)))
     smax = int(round(math.log10(scale_max_pix) / math.log10(2.0)))
-    if smin == 0:
+    if not smin: #Raslan - it was "if simn == 0"
         # os.system(
         subprocess.call((
             "mr_filter -m 10 -i 3 -s 3.,3. -n " + str(smax + 1) + " -f 3 -K -C 2 -p -e0 -A " + filled_catimage + " " + wmap
@@ -1521,6 +1521,8 @@ def make_cylinders(peaks_list, dslices, gawa_cfg):
                         dec_cyl, dec_1, np0, i0, i1, isl, nsl, type="float"
                     )
 
+    data_cylinders = None #Raslan - Removing from else
+
     if npeaks_all > 0:
         data_init = init_cylinders(rank_cyl, ip_cyl, gawa_cfg)
         data_cylinders = append_peaks_infos_to_cylinders(
@@ -1534,8 +1536,8 @@ def make_cylinders(peaks_list, dslices, gawa_cfg):
                 np.round(float(npeaks_all) / float(ncyl), 2)
             )
         )
-    else:
-        data_cylinders = None
+    # else:
+    #     data_cylinders = None #Raslan
 
     return data_cylinders
 

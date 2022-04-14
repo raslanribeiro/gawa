@@ -60,6 +60,7 @@ def gawa_thread_call(param, thread_id):
     all_tiles = read_FitsCat(os.path.join(workdir, param['admin']['tiling']['tiles_filename']))
     tiles = all_tiles[(all_tiles['thread_id']==int(thread_id))]    
 
+    del all_tiles #Raslan
     print ('THREAD ', int(thread_id))
 
     for it in range(0, len(tiles)):
@@ -97,11 +98,15 @@ def gawa_concatenate(param):
     # concatenate all tiles 
     all_tiles = read_FitsCat(os.path.join(param['out_paths']['workdir'], param['admin']['tiling']['tiles_filename']))
 
-    list_results = []
-    for it in range(0, len(all_tiles)):
-        tile_dir = tile_dir_name(param['out_paths']['workdir'], int(all_tiles['id'][it]) )
-        list_results.append(os.path.join(tile_dir, param['out_paths']['gawa']['results']))
+    # list_results = []
+    # for it in range(0, len(all_tiles)):
+    #     tile_dir = tile_dir_name(param['out_paths']['workdir'], int(all_tiles['id'][it]) )
+    #     list_results.append(os.path.join(tile_dir, param['out_paths']['gawa']['results']))
+
+    list_results = list(map(lambda it: os.path.join(tile_dir_name(param['out_paths']['workdir'], int(all_tiles['id'][it]) ), param['out_paths']['gawa']['results']), list(range(len(all_tiles))))) #Raslan - map is faster than for loops
+
     
+    del all_tiles #Raslan
     concatenate_clusters(list_results, os.path.join(param['out_paths']['workdir'],'clusters0.fits')) 
 
     # final filtering 
@@ -116,6 +121,7 @@ confg = "gawa.json"
 # read config file
 with open(confg) as fstream:
     param = json.load(fstream)
+    fstream.close() #Raslan - it is necessary to flush the buffer
 
 # Working & output directories 
 workdir = param['out_paths']['workdir']
@@ -175,9 +181,7 @@ with tqdm(total=len(futures), file=sys.stdout) as pbar2:
     is_done = list()
     done_count = 0
     while is_done.count(True) != len(futures):
-        is_done = list()
-        for f in futures:
-            is_done.append(f.done())
+        is_done = list(map(lambda f: f.done(), futures)) #Raslan - map is faster than for loops
 
         if is_done.count(True) != done_count:
             done_count = is_done.count(True)

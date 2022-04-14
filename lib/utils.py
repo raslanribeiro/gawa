@@ -85,7 +85,7 @@ def read_mosaicFitsCat_in_disc(galcat, tile, radius_deg):
 
     relevant_fits_pixels = fits_pixels_in_disc[np.isin(fits_pixels_in_disc, hpix_fits)]
 
-    if len(relevant_fits_pixels) > 0:
+    if len(relevant_fits_pixels): #Raslan - removed comparation
         # merge intersecting fits
         for i in range(0, len(relevant_fits_pixels)):
             dat_disc = read_FitsCat(
@@ -176,16 +176,16 @@ def read_mosaicFitsCat_in_hpix(galcat, hpix_tile, Nside_tile, nest_tile):
 
     relevant_fits_pixels = np.unique(hpix_fits[np.isin(hpix_fits_tile, hpix_tile)])
 
-    if len(relevant_fits_pixels) > 0:
+    if len(relevant_fits_pixels): #Raslan - removed comparation
         # merge intersecting fits
         for i in range(0, len(relevant_fits_pixels)):
             dat = read_FitsCat(
                 os.path.join(gdir, str(relevant_fits_pixels[i]) + extension)
             )
-            if i == 0:
-                data_gal_hpix = np.copy(dat)
-            else:
+            if i: #Raslan - reversed if/else and removed comparation
                 data_gal_hpix = np.append(data_gal_hpix, dat)
+            else:
+                data_gal_hpix = np.copy(dat)
     else:
         data_gal_hpix = np.zeros(0)
     return data_gal_hpix
@@ -219,7 +219,7 @@ def read_mosaicFootprint_in_hpix(footprint, hpix_tile, Nside_tile, nest_tile):
 
     relevant_fits_pixels = np.unique(hpix_fits[np.isin(hpix_fits_tile, hpix_tile)])
 
-    if len(relevant_fits_pixels) > 0:
+    if len(relevant_fits_pixels): #Raslan - removed comparation
         # merge intersecting fits
         for i in range(0, len(relevant_fits_pixels)):
             dat = read_FitsCat(
@@ -346,7 +346,7 @@ def add_key_to_fits(fitsfile, key_val, key_name, key_type):
 
     if key_type == "float":
         new_col = fits.ColDefs([fits.Column(name=key_name, format="E", array=key_val)])
-    if key_type == "int":
+    elif key_type == "int": #Raslan - changed to elif to avoid two comparations
         new_col = fits.ColDefs([fits.Column(name=key_name, format="J", array=key_val)])
 
     hdu = fits.BinTableHDU.from_columns(orig_cols + new_col)
@@ -638,7 +638,7 @@ def hpx_in_annulus(
     coverfrac = 0.0
     hpx_in_ann, frac_in_ann = [], []
 
-    if npix_all > 0:
+    if npix_all: #Raslan - Faster than comparation
         idx = np.isin(hpix, pixels_in_ann)
         hpx_in_ann = hpix[idx]  # visible pixels
         frac_in_ann = frac[idx]
@@ -776,7 +776,7 @@ def split_survey_from_hpx(
         racen_i = (ramin_i + ramax_i) / 2.0
 
         for j in range(0, nx[i]):
-            if k == 0:
+            if k: #Raslan - removed comparation
                 racen[k], deccen[k] = racen_i[j], deccen_i[i]
                 cdec[k], cdec_frame[k] = cdec0[i], cdec_frame0[i]
                 ramin_tile[k], ramax_tile[k] = ramin_i[j], ramax_i[j]
@@ -872,7 +872,7 @@ def filter_tile(dat, galcat_keys_dict, tiles_specs):
         tiles_specs["decmin_frame"],
         tiles_specs["decmax_frame"],
     )
-    tile_id = tiles_specs["tile_id"]
+    # tile_id = tiles_specs["tile_id"] #Raslan - Not used
 
     ra, dec = dat[galcat_keys_dict["key_ra"]], dat[galcat_keys_dict["key_dec"]]
 

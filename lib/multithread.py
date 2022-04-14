@@ -36,7 +36,8 @@ def split_equal_nr_of_tiles_in_threads(n_threads, ntiles):
                     thread_ids[k] = i
                     k += 1
 
-        if ntiles % n_threads != 0:
+        # if ntiles % n_threads != 0: #Raslan - It is not necessary
+        else:
             ng = int(p)
             nr = ntiles - ng * n_threads
 
@@ -73,7 +74,7 @@ def split_equal_area_in_threads(n_threads, tiles_filename):
         n_threads = ntiles
         thread_ids = np.arange(0, ntiles)
 
-    if n_threads == 0:
+    if not n_threads: #Raslan - removed comparation
         n_threads = ntiles
         thread_ids = np.arange(0, ntiles)
 
