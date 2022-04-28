@@ -1,6 +1,8 @@
 import sys
 import os
+import time
 
+start = time.time()
 warn_level = 'ignore'
 
 if not sys.warnoptions:
@@ -192,4 +194,6 @@ with tqdm(total=len(futures), file=sys.stdout) as pbar2:
             sleep(3)
 
 gawa_concatenate(param)
+end = time.time()
+print("elapsed time: " + str(end - start))
 print ('all done folks!')
