@@ -7,8 +7,9 @@ This is a code intended to identify stellar clusters using wavelet transformatio
 ### Instalation
 
 Clone the repository and create an environment with Conda:
+
 ```bash
-git clone https://github.com/linea-it/gawa && cd gawa 
+git clone https://github.com/linea-it/gawa && cd gawa
 conda create -n gawa python=3.6
 conda update -n base -c defaults conda
 conda activate gawa
@@ -35,7 +36,7 @@ rm -r tiles footprint isochrone_masks
 and files:
 
 ```bash
-rm tiles_specs.fits cluster.fits cluster0.fits
+rm tiles_specs.fits clusters.fits clusters0.fits
 ```
 
 If you run with max_threads > 1, the kernel may die while running the main cell. We think that this is related to the memory required by the jobs. Set max_threads = 1 and run again.
