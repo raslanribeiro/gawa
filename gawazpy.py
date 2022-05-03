@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import time
 
 start = time.time()
@@ -9,11 +9,13 @@ if not sys.warnoptions:
     import warnings
     warnings.simplefilter(warn_level)
     os.environ["PYTHONWARNINGS"] = warn_level
-
+    
+import matplotlib as mpl
+mpl.use('Agg')
 import numpy as np
 import json
-from tqdm import tqdm
 from time import sleep
+from astropy.table import Table
 
 from lib.multithread import split_equal_area_in_threads
 from lib.utils import hpx_split_survey
@@ -28,46 +30,23 @@ from lib.gawa import compute_cmd_masks, compute_dslices, create_gawa_directories
 from lib.gawa import gawa_tile, tile_dir_name
 from lib.gawa import cl_duplicates_filtering
 
-import parsl
-from parsl import python_app
-from parsl.config import Config
-from parsl.executors.threads import ThreadPoolExecutor
+from multiprocessing import Pool
 
-local_threads = Config(
-    executors=[
-        ThreadPoolExecutor(
-            max_threads=1,
-            label='local_threads'
-        )
-    ],
-    internal_tasks_max_threads=1
-)
-
-parsl.load(local_threads)
-
-@python_app
-def gawa_thread_call(param, thread_id):
-    """_summary_
-
-    Args:
-        param (_type_): _description_
-        thread_id (_type_): _description_
-    """
-
-    import os
-    from astropy.table import Table
+def gawa_thread_call(args):
+    param = args[0]
+    thread_id = args[1]
 
     workdir = param['out_paths']['workdir']
 
     all_tiles = read_FitsCat(os.path.join(workdir, param['admin']['tiling']['tiles_filename']))
     tiles = all_tiles[(all_tiles['thread_id']==int(thread_id))]    
-
+    
     del all_tiles #Raslan
-    print ('THREAD ', int(thread_id))
+    print('THREAD ', int(thread_id))
 
     for it in range(0, len(tiles)):
         tile_dir = tile_dir_name(workdir, int(tiles['id'][it]) )
-        print ('..... Tile ', int(tiles['id'][it]))
+        print('..... Tile ', int(tiles['id'][it]))
 
         create_directory(tile_dir)
         create_gawa_directories(tile_dir, param['out_paths']['gawa'])
@@ -76,7 +55,7 @@ def gawa_thread_call(param, thread_id):
         tile_radius_deg = tile_radius(param['admin']['tiling'])
         tile_specs = create_tile_specs(tiles[it], tile_radius_deg, param['admin'])
         data_star_tile = read_mosaicFitsCat_in_disc(param['starcat'][param['survey']], tiles[it], tile_radius_deg)   
-        data_fp_tile   = read_mosaicFootprint_in_disc (param['footprint'][param['survey']], tiles[it], tile_radius_deg)
+        data_fp_tile   = read_mosaicFootprint_in_disc(param['footprint'][param['survey']], tiles[it], tile_radius_deg)
 
         if param['verbose'] >= 2:
             t = Table(data_star_tile)
@@ -90,6 +69,7 @@ def gawa_thread_call(param, thread_id):
             data_fp_tile, param['footprint'][param['survey']],
             param['gawa_cfg'], param['admin'], param['out_paths'], param['verbose']
         )
+
 def gawa_concatenate(param):
     """_summary_
 
@@ -100,14 +80,8 @@ def gawa_concatenate(param):
     # concatenate all tiles 
     all_tiles = read_FitsCat(os.path.join(param['out_paths']['workdir'], param['admin']['tiling']['tiles_filename']))
 
-    # list_results = []
-    # for it in range(0, len(all_tiles)):
-    #     tile_dir = tile_dir_name(param['out_paths']['workdir'], int(all_tiles['id'][it]) )
-    #     list_results.append(os.path.join(tile_dir, param['out_paths']['gawa']['results']))
-
     list_results = list(map(lambda it: os.path.join(tile_dir_name(param['out_paths']['workdir'], int(all_tiles['id'][it]) ), param['out_paths']['gawa']['results']), list(range(len(all_tiles))))) #Raslan - map is faster than for loops
 
-    
     del all_tiles #Raslan
     concatenate_clusters(list_results, os.path.join(param['out_paths']['workdir'],'clusters0.fits')) 
 
@@ -163,35 +137,9 @@ compute_dslices(param['isochrone_masks'][param['survey']], param['gawa_cfg']['ds
 # compute cmd_masks 
 print ('Compute CMD masks')
 compute_cmd_masks(param['isochrone_masks'][param['survey']], param['out_paths'], param['gawa_cfg'])
-futures = list()
 
-with tqdm(total=len(thread_ids), file=sys.stdout) as pbar:
-    pbar.set_description("Submit Parsls Tasks")
-
-    for i in np.unique(thread_ids):
-        futures.append(gawa_thread_call(param, i))
-        pbar.update()
-
-#for i in np.unique(thread_ids): 
-#    futures.append(gawa_thread_call(param, i))
-    
-#for p in futures:
-#    p.result()
-print("Tasks Done:")
-
-with tqdm(total=len(futures), file=sys.stdout) as pbar2:
-    is_done = list()
-    done_count = 0
-    while is_done.count(True) != len(futures):
-        is_done = list(map(lambda f: f.done(), futures)) #Raslan - map is faster than for loops
-
-        if is_done.count(True) != done_count:
-            done_count = is_done.count(True)
-            pbar2.reset(total=len(futures))  
-            pbar2.update(done_count)
-
-        if done_count < len(futures):
-            sleep(3)
+with Pool(3) as p:
+    p.map(gawa_thread_call, [(param, i) for i in np.unique(thread_ids)])
 
 gawa_concatenate(param)
 end = time.time()
