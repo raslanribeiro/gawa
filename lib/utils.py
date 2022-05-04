@@ -127,7 +127,7 @@ def read_mosaicFootprint_in_disc(footprint, tile, radius_deg):
     # list of available galcats => healpix pixels
     gdir = footprint["mosaic"]["dir"]
     raw_list = np.array(os.listdir(gdir))
-    hpix_fits = np.array(
+    hpix_fits = da.array(
         [os.path.splitext(x)[0].replace("_footprint", "") for x in raw_list]
     ).astype(int)
     extension = os.path.splitext(raw_list[0])[1]
@@ -167,7 +167,7 @@ def read_mosaicFitsCat_in_hpix(galcat, hpix_tile, Nside_tile, nest_tile):
     # list of available galcats => healpix pixels
     gdir = galcat["mosaic"]["dir"]
     raw_list = np.array(os.listdir(gdir))
-    hpix_fits = np.array([os.path.splitext(x)[0] for x in raw_list]).astype(int)
+    hpix_fits = da.array([os.path.splitext(x)[0] for x in raw_list]).astype(int)
     extension = os.path.splitext(raw_list[0])[1]
     Nside_fits, nest_fits = galcat["mosaic"]["Nside"], galcat["mosaic"]["nest"]
 
@@ -208,7 +208,7 @@ def read_mosaicFootprint_in_hpix(footprint, hpix_tile, Nside_tile, nest_tile):
     # list of available footprints => healpix pixels
     gdir = footprint["mosaic"]["dir"]
     raw_list = np.array(os.listdir(gdir))
-    hpix_fits = np.array(
+    hpix_fits = da.array(
         [os.path.splitext(x)[0].replace("_footprint", "") for x in raw_list]
     ).astype(int)
     extension = os.path.splitext(raw_list[0])[1]
