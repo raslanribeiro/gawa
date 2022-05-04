@@ -1,4 +1,5 @@
 import numpy as np
+import dask.array as da
 import astropy.io.fits as fits
 import os
 import healpy as hp
@@ -70,7 +71,7 @@ def read_mosaicFitsCat_in_disc(galcat, tile, radius_deg):
     # list of available galcats => healpix pixels
     gdir = galcat["mosaic"]["dir"]
     raw_list = np.array(os.listdir(gdir))
-    hpix_fits = np.array([os.path.splitext(x)[0] for x in raw_list]).astype(int)
+    hpix_fits = da.array([os.path.splitext(x)[0] for x in raw_list]).astype(int)
     extension = os.path.splitext(raw_list[0])[1]
 
     # find list of fits intersection cluster field
@@ -78,8 +79,8 @@ def read_mosaicFitsCat_in_disc(galcat, tile, radius_deg):
     fits_pixels_in_disc = hp.query_disc(
         nside=Nside_fits,
         nest=nest_fits,
-        vec=hp.pixelfunc.ang2vec(np.radians(90.0 - deccen), np.radians(racen)),
-        radius=np.radians(radius_deg),
+        vec=hp.pixelfunc.ang2vec(da.radians(90.0 - deccen), da.radians(racen)),
+        radius=da.radians(radius_deg),
         inclusive=True,
     )
 
@@ -91,7 +92,7 @@ def read_mosaicFitsCat_in_disc(galcat, tile, radius_deg):
             dat_disc = read_FitsCat(
                 os.path.join(gdir, str(relevant_fits_pixels[i]) + extension)
             )
-            dcen = np.degrees(
+            dcen = da.degrees(
                 dist_ang(
                     racen,
                     deccen,
@@ -135,8 +136,8 @@ def read_mosaicFootprint_in_disc(footprint, tile, radius_deg):
     fits_pixels_in_disc = hp.query_disc(
         nside=Nside_fits,
         nest=nest_fits,
-        vec=hp.pixelfunc.ang2vec(np.radians(90.0 - deccen), np.radians(racen)),
-        radius=np.radians(radius_deg),
+        vec=hp.pixelfunc.ang2vec(da.radians(90.0 - deccen), da.radians(racen)),
+        radius=da.radians(radius_deg),
         inclusive=True,
     )
     relevant_fits_pixels = fits_pixels_in_disc[np.isin(fits_pixels_in_disc, hpix_fits)]
@@ -151,7 +152,7 @@ def read_mosaicFootprint_in_disc(footprint, tile, radius_deg):
             ra, dec = hpix2radec(
                 dat_disc[footprint["key_pixel"]], footprint["Nside"], footprint["nest"]
             )
-            dcen = np.degrees(dist_ang(racen, deccen, ra, dec))
+            dcen = da.degrees(dist_ang(racen, deccen, ra, dec))
             if i == 0:
                 data_fp_disc = np.copy(dat_disc[dcen < radius_deg])
             else:
@@ -398,7 +399,7 @@ def gaussian(x, mu, sig):
     Returns:
         _type_: _description_
     """
-    return np.exp(-((x - mu) ** 2) / (2.0 * sig**2)) / (sig * np.sqrt(2.0 * np.pi))
+    return da.exp(-((x - mu) ** 2) / (2.0 * sig**2)) / (sig * da.sqrt(2.0 * np.pi))
 
 
 def dist_ang(ra1, dec1, ra_ref, dec_ref):
@@ -420,10 +421,10 @@ def dist_ang(ra1, dec1, ra_ref, dec_ref):
     # ra_ref-dec_ref are scalars
     # output is in radian
 
-    costheta = np.sin(np.radians(dec_ref)) * np.sin(np.radians(dec1)) + np.cos(
-        np.radians(dec_ref)
-    ) * np.cos(np.radians(dec1)) * np.cos(np.radians(ra1 - ra_ref))
-    dist_ang = np.arccos(costheta)
+    costheta = da.sin(da.radians(dec_ref)) * da.sin(da.radians(dec1)) + da.cos(
+        da.radians(dec_ref)
+    ) * da.cos(da.radians(dec1)) * da.cos(da.radians(ra1 - ra_ref))
+    dist_ang = da.arccos(costheta)
 
     return dist_ang  # radian
 
@@ -439,7 +440,7 @@ def area_ann_deg2(theta_1, theta_2):
         _type_: _description_
     """
     return (
-        2.0 * np.pi * (np.cos(np.radians(theta_1)) - np.cos(np.radians(theta_2))) * (180.0 / np.pi) ** 2
+        2.0 * np.pi * (da.cos(da.radians(theta_1)) - da.cos(da.radians(theta_2))) * (180.0 / np.pi) ** 2
     )
 
 
@@ -491,7 +492,7 @@ def radec_window_area(ramin, ramax, decmin, decmax):
     decmini = np.arange(decmin, decmax, step)
     decmaxi = decmini + step
     decceni = (decmini + decmaxi) / 2.0
-    darea = (ramax - ramin) * np.cos(np.pi * decceni / 180.0) * (decmaxi - decmini)
+    darea = (ramax - ramin) * da.cos(np.pi * decceni / 180.0) * (decmaxi - decmini)
     return np.sum(darea)
 
 
@@ -500,7 +501,7 @@ def radec2phitheta(ra, dec):
     """
     Turn (ra,dec) [deg] in (phi, theta) [rad] used by healpix
     """
-    phi, theta = np.radians(ra), np.radians(90.0 - dec)
+    phi, theta = da.radians(ra), da.radians(90.0 - dec)
     return phi, theta
 
 
@@ -514,14 +515,14 @@ def phitheta2radec(phi, theta):
     Returns:
         _type_: _description_
     """
-    return np.degrees(phi), 90.0 - np.degrees(theta)
+    return da.degrees(phi), 90.0 - da.degrees(theta)
 
 
 def radec2hpix(ra, dec, Nside, nest):
     """
     From a list of ra-dec's (deg) compute the list of associated healpix index
     """
-    phi, theta = radec2phitheta(ra, dec)  # np.radians(ra), np.radians(90.-dec)
+    phi, theta = radec2phitheta(ra, dec)  # da.radians(ra), da.radians(90.-dec)
     return hp.ang2pix(Nside, theta, phi, nest)
 
 
@@ -595,16 +596,16 @@ def all_hpx_in_annulus(ra, dec, radius_in_deg, radius_out_deg, hpx_meta, inclusi
     pixels_in_disc = hp.query_disc(
         nside=Nside,
         nest=nest,
-        vec=hp.pixelfunc.ang2vec(np.radians(90.0 - dec), np.radians(ra)),
-        radius=np.radians(radius_out_deg),
+        vec=hp.pixelfunc.ang2vec(da.radians(90.0 - dec), da.radians(ra)),
+        radius=da.radians(radius_out_deg),
         inclusive=inclusive,
     )
     if radius_in_deg > 0.0:
         pixels_in_disc_in = hp.query_disc(
             nside=Nside,
             nest=nest,
-            vec=hp.pixelfunc.ang2vec(np.radians(90.0 - dec), np.radians(ra)),
-            radius=np.radians(radius_in_deg),
+            vec=hp.pixelfunc.ang2vec(da.radians(90.0 - dec), da.radians(ra)),
+            radius=da.radians(radius_in_deg),
             inclusive=inclusive,
         )
 
@@ -701,9 +702,9 @@ def split_survey_from_hpx(
     ra, dec = hpix2radec(hpix, Nside, nest)
 
     size_pix_deg = hp.pixelfunc.nside2resol(Nside, arcmin=True) / 60.0
-    ra_1, ra_2 = ra - size_pix_deg / np.cos(
-        np.radians(dec)
-    ), ra + size_pix_deg / np.cos(np.radians(dec))
+    ra_1, ra_2 = ra - size_pix_deg / da.cos(
+        da.radians(dec)
+    ), ra + size_pix_deg / da.cos(da.radians(dec))
     dec_1, dec_2 = dec - size_pix_deg, dec + size_pix_deg
 
     ra_all, dec_all = np.hstack((ra_1, ra_2)), np.hstack((dec_1, dec_2))
@@ -732,9 +733,9 @@ def split_survey_from_hpx(
     decmin_i, decmax_i = dec_i, dec_i + ystep
     deccen_i = (decmin_i + decmax_i) / 2.0
     cdec_frame0 = np.maximum(
-        np.cos(decmin_i * np.pi / 180.0), np.cos(decmax_i * np.pi / 180.0)
+        da.cos(decmin_i * np.pi / 180.0), da.cos(decmax_i * np.pi / 180.0)
     )
-    cdec0 = np.cos(deccen_i * np.pi / 180.0)
+    cdec0 = da.cos(deccen_i * np.pi / 180.0)
 
     # init
     nx = np.zeros(ny).astype(int)
@@ -957,9 +958,9 @@ def hpx_split_survey(footprint_file, footprint, admin, output):
             nside=Nside_fp,
             nest=nest_fp,
             vec=hp.pixelfunc.ang2vec(
-                np.radians(90.0 - deccen[i]), np.radians(racen[i])
+                da.radians(90.0 - deccen[i]), da.radians(racen[i])
             ),
-            radius=np.radians(radius_deg),
+            radius=da.radians(radius_deg),
             inclusive=False,
         )
         framed_eff_area_deg2[i] = np.sum(
@@ -1085,15 +1086,15 @@ def cond_in_disc(rag, decg, hpxg, Nside, nest, racen, deccen, rad_deg):
     pixels_in_disc_strict = hp.query_disc(
         nside=Nside,
         nest=nest,
-        vec=hp.pixelfunc.ang2vec(np.radians(90.0 - deccen), np.radians(racen)),
-        radius=np.radians(rad_deg),
+        vec=hp.pixelfunc.ang2vec(da.radians(90.0 - deccen), da.radians(racen)),
+        radius=da.radians(rad_deg),
         inclusive=False,
     )
     pixels_in_disc = hp.query_disc(
         nside=Nside,
         nest=nest,
-        vec=hp.pixelfunc.ang2vec(np.radians(90.0 - deccen), np.radians(racen)),
-        radius=np.radians(rad_deg),
+        vec=hp.pixelfunc.ang2vec(da.radians(90.0 - deccen), da.radians(racen)),
+        radius=da.radians(rad_deg),
         inclusive=True,
     )
 
@@ -1103,7 +1104,7 @@ def cond_in_disc(rag, decg, hpxg, Nside, nest, racen, deccen, rad_deg):
 
     dist2cl = np.ones(len(rag)) * 2.0 * rad_deg
     dist2cl[cond_strict] = 0.0
-    dist2cl[cond_edge] = np.degrees(
+    dist2cl[cond_edge] = da.degrees(
         dist_ang(rag[cond_edge], decg[cond_edge], racen, deccen)
     )
     return dist2cl < rad_deg
@@ -1126,8 +1127,8 @@ def cond_in_hpx_disc(hpxg, Nside, nest, racen, deccen, rad_deg):
     pixels_in_disc_strict = hp.query_disc(
         nside=Nside,
         nest=nest,
-        vec=hp.pixelfunc.ang2vec(np.radians(90.0 - deccen), np.radians(racen)),
-        radius=np.radians(rad_deg),
+        vec=hp.pixelfunc.ang2vec(da.radians(90.0 - deccen), da.radians(racen)),
+        radius=da.radians(rad_deg),
         inclusive=False,
     )
 

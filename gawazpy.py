@@ -9,9 +9,10 @@ if not sys.warnoptions:
     import warnings
     warnings.simplefilter(warn_level)
     os.environ["PYTHONWARNINGS"] = warn_level
-    
+
 import matplotlib as mpl
 mpl.use('Agg')
+import dask.array as da
 import numpy as np
 import json
 from time import sleep
@@ -126,7 +127,7 @@ if not os.path.isfile(tiles_filename):
     add_key_to_fits(tiles_filename, thread_ids, 'thread_id', 'int')
 else:
     dat = read_FitsCat(tiles_filename)
-    ntiles, n_threads = len(dat), np.amax(dat['thread_id']) 
+    ntiles, n_threads = len(dat), da.max(dat['thread_id']) 
     thread_ids = dat['thread_id']
     
 print ('Ntiles / Nthreads = ', ntiles, ' / ', n_threads)
@@ -140,7 +141,6 @@ compute_cmd_masks(param['isochrone_masks'][param['survey']], param['out_paths'],
 
 with Pool(3) as p:
     p.map(gawa_thread_call, [(param, i) for i in np.unique(thread_ids)])
-
 gawa_concatenate(param)
 end = time.time()
 print("elapsed time: " + str(end - start))
