@@ -1,4 +1,3 @@
-import numpy as np
 import yaml
 import os
 import astropy.io.fits as fits
