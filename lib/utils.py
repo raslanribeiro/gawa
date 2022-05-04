@@ -384,7 +384,7 @@ def mad(x):
     Returns:
         _type_: _description_
     """
-    xmad = 1.4826 * np.median(abs(x))
+    xmad = 1.4826 * da.median(abs(x))
     return xmad
 
 
