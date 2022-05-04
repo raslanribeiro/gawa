@@ -785,18 +785,18 @@ def split_survey_from_hpx(
                 ra_id[k], dec_id[k] = j, i
                 size_ra[k], size_dec[k] = xstep * cdec0[i], ystep
             else:
-                racen = np.vstack((racen, np.array(racen_i[j])))
-                deccen = np.vstack((deccen, np.array(deccen_i[i])))
-                cdec = np.vstack((cdec, np.array(cdec0[i])))
-                cdec_frame = np.vstack((cdec_frame, np.array(cdec_frame0[i])))
-                ramin_tile = np.vstack((ramin_tile, np.array(ramin_i[j])))
-                ramax_tile = np.vstack((ramax_tile, np.array(ramax_i[j])))
-                decmin_tile = np.vstack((decmin_tile, np.array(decmin_i[i])))
-                decmax_tile = np.vstack((decmax_tile, np.array(decmax_i[i])))
-                ra_id = np.vstack((ra_id, np.array(j)))
-                dec_id = np.vstack((dec_id, np.array(i)))
-                size_ra = np.vstack((size_ra, np.array(xstep * cdec0[i])))
-                size_dec = np.vstack((size_dec, np.array(ystep)))
+                racen = da.vstack((racen, np.array(racen_i[j])))
+                deccen = da.vstack((deccen, np.array(deccen_i[i])))
+                cdec = da.vstack((cdec, np.array(cdec0[i])))
+                cdec_frame = da.vstack((cdec_frame, np.array(cdec_frame0[i])))
+                ramin_tile = da.vstack((ramin_tile, np.array(ramin_i[j])))
+                ramax_tile = da.vstack((ramax_tile, np.array(ramax_i[j])))
+                decmin_tile = da.vstack((decmin_tile, np.array(decmin_i[i])))
+                decmax_tile = da.vstack((decmax_tile, np.array(decmax_i[i])))
+                ra_id = da.vstack((ra_id, np.array(j)))
+                dec_id = da.vstack((dec_id, np.array(i)))
+                size_ra = da.vstack((size_ra, np.array(xstep * cdec0[i])))
+                size_dec = da.vstack((size_dec, np.array(ystep)))
             k += 1
 
     nxmax = np.amax(nx)
