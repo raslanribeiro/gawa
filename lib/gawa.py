@@ -1,6 +1,7 @@
 from astropy.io import fits
 from astropy import wcs
 import numpy as np
+import dask.array as da
 import matplotlib.pyplot as plt
 import scipy.ndimage as ndi
 import os
@@ -137,9 +138,9 @@ def effective_area_framed_tile(tile, data_fp, footprint, admin):
         nside=Nside,
         nest=nest,
         vec=hp.pixelfunc.ang2vec(
-            np.radians(90.0 - tile["dec"]), np.radians(tile["ra"])
+            da.radians(90.0 - tile["dec"]), da.radians(tile["ra"])
         ),  # noqa
-        radius=np.radians(radius_deg),
+        radius=da.radians(radius_deg),
         inclusive=False,
     )  # noqa
     framed_eff_area_deg2 = np.sum(
@@ -551,9 +552,9 @@ def randoms_in_spherical_cap(tile, bkg_arcmin2):
         nside=Nside_samp,
         nest=False,
         vec=hp.pixelfunc.ang2vec(
-            np.radians(90.0 - tile["dec"]), np.radians(tile["ra"])
+            da.radians(90.0 - tile["dec"]), da.radians(tile["ra"])
         ),
-        radius=np.radians(tile["radius_tile_deg"]),
+        radius=da.radians(tile["radius_tile_deg"]),
         inclusive=False,
     )
     area = 3600.0 * area_ann_deg2(0.0, tile["radius_tile_deg"])
@@ -777,7 +778,7 @@ def filter_peaks(tile, map_resolution, ra0, dec0, ip0, jp0):
     """
     if tile["hpix"] > 0:  # not target mode
         err_deg = 2.0 / (60.0 * float(map_resolution))
-        dx, dy = err_deg * np.cos(np.radians(dec0)), err_deg
+        dx, dy = err_deg * np.cos(da.radians(dec0)), err_deg
         ghpx = radec2hpix(ra0, dec0, tile["Nside"], tile["nest"])
         ghpx1 = radec2hpix(ra0 - dx, dec0 - dy, tile["Nside"], tile["nest"])
         ghpx2 = radec2hpix(ra0 - dx, dec0 + dy, tile["Nside"], tile["nest"])
@@ -926,8 +927,8 @@ def compute_flux_aper(rap, decp, hpix, weight, aper, Nside, nest):
     pixels_in_disc = hp.query_disc(
         nside=Nside,
         nest=nest,
-        vec=hp.pixelfunc.ang2vec(np.radians(90.0 - decp), np.radians(rap)),
-        radius=np.radians(aper),
+        vec=hp.pixelfunc.ang2vec(da.radians(90.0 - decp), da.radians(rap)),
+        radius=da.radians(aper),
         inclusive=False,
     )
 
