@@ -143,9 +143,9 @@ def effective_area_framed_tile(tile, data_fp, footprint, admin):
         radius=da.radians(radius_deg),
         inclusive=False,
     )  # noqa
-    framed_eff_area_deg2 = np.sum(
+    framed_eff_area_deg2 = da.sum(
         frac_map[np.isin(hpix_map, pixels_in_disc)]
-    ) * hp.pixelfunc.nside2pixarea(
+    ).compute() * hp.pixelfunc.nside2pixarea(
         Nside, degrees=True
     )  # noqa
     return framed_eff_area_deg2
@@ -588,7 +588,7 @@ def compute_filled_catimage(
         footprint["Nside"], data_fp[footprint["key_pixel"]], None, footprint["nest"]
     )
     mask = np.isin(nlist, data_fp[footprint["key_pixel"]])
-    edge_pixels = data_fp[footprint["key_pixel"]][(np.sum(mask, axis=0) < 8)]
+    edge_pixels = data_fp[footprint["key_pixel"]][(da.sum(mask, axis=0).compute() < 8)]
 
     # find empty footprint pixels at resolution Nside*2
     sub_edge_hpix = sub_hpix(edge_pixels, footprint["Nside"], footprint["nest"])
@@ -607,7 +607,7 @@ def compute_filled_catimage(
         2 * footprint["Nside"], empty_sub_edge_hpix, None, footprint["nest"]
     )
     mask_esep = np.isin(nlist_esep, shpix_filled, invert=True)
-    empty_sub_edge_hpix = empty_sub_edge_hpix[(np.sum(mask_esep, axis=0) == 8)]
+    empty_sub_edge_hpix = empty_sub_edge_hpix[(da.sum(mask_esep, axis=0).compute() == 8)]
 
     # build uniform randoms in spherical cap with proper density
     ra_ran, dec_ran = randoms_in_spherical_cap(tile, bkg_arcmin2)
@@ -932,7 +932,7 @@ def compute_flux_aper(rap, decp, hpix, weight, aper, Nside, nest):
         inclusive=False,
     )
 
-    Nraw = np.sum(weight[np.isin(hpix, pixels_in_disc)])
+    Nraw = da.sum(weight[np.isin(hpix, pixels_in_disc)]).compute()
     pixelized_area = float(len(pixels_in_disc)) * hp.pixelfunc.nside2pixarea(
         Nside, degrees=True
     )
@@ -1156,8 +1156,8 @@ def excess_cmd_flux(
         )
         excess = colmag_pix - aper_area * colmag_pix_tile
         wexcess = excess * weight_map
-        Naper[i] = np.sum(excess[excess > 0.0])
-        Naperw[i] = np.sum(wexcess[wexcess > 0.0])
+        Naper[i] = da.sum(excess[excess > 0.0]).compute()
+        Naperw[i] = da.sum(wexcess[wexcess > 0.0]).compute()
     return Naper, Naperw
 
 
