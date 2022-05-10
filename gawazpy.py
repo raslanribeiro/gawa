@@ -91,55 +91,57 @@ def gawa_concatenate(param):
     data_clusters = add_clusters_unique_id(data_clusters0f, param['gawa_cfg']['clkeys'])
     data_clusters.write(os.path.join(param['out_paths']['workdir'],'clusters.fits'), overwrite=True)
 # read config file as online argument 
-confg = "gawa.json"
 
-# read config file
-with open(confg) as fstream:
-    param = json.load(fstream)
-    fstream.close() #Raslan - it is necessary to flush the buffer
+if __name__ =="__main__":
+    confg = "gawa.json"
 
-# Working & output directories 
-workdir = param['out_paths']['workdir']
-create_directory(workdir)
-create_directory(os.path.join(workdir, 'tiles'))
-print ('Survey : ', param['survey'])
-print ('workdir : ', workdir)
-tiles_filename = os.path.join(workdir, param['admin']['tiling']['tiles_filename'])
+    # read config file
+    with open(confg) as fstream:
+        param = json.load(fstream)
+        fstream.close() #Raslan - it is necessary to flush the buffer
 
-# create required data structure if not exist and update config 
-if not param['input_data_structure'][param['survey']]['footprint_hpx_mosaic']:
-    create_mosaic_footprint(param['footprint'][param['survey']], os.path.join(workdir, 'footprint'))
-    param['footprint'][param['survey']]['mosaic']['dir'] = os.path.join(workdir, 'footprint')  
+    # Working & output directories 
+    workdir = param['out_paths']['workdir']
+    create_directory(workdir)
+    create_directory(os.path.join(workdir, 'tiles'))
+    print ('Survey : ', param['survey'])
+    print ('workdir : ', workdir)
+    tiles_filename = os.path.join(workdir, param['admin']['tiling']['tiles_filename'])
 
-# split_area:
-if param['input_data_structure'][param['survey']]['footprint_hpx_mosaic']: 
-    survey_footprint = os.path.join(workdir, 'survey_footprint.fits')
-    if not os.path.isfile(survey_footprint):
-        create_survey_footprint_from_mosaic(param['footprint'][param['survey']], survey_footprint)
-else:
-    survey_footprint = param['footprint'][param['survey']]['survey_footprint']
+    # create required data structure if not exist and update config 
+    if not param['input_data_structure'][param['survey']]['footprint_hpx_mosaic']:
+        create_mosaic_footprint(param['footprint'][param['survey']], os.path.join(workdir, 'footprint'))
+        param['footprint'][param['survey']]['mosaic']['dir'] = os.path.join(workdir, 'footprint')  
 
-if not os.path.isfile(tiles_filename):
-    ntiles = hpx_split_survey(survey_footprint, param['footprint'][param['survey']], param['admin']['tiling'], tiles_filename)
-    n_threads, thread_ids = split_equal_area_in_threads(param['admin']['nthreads_max'], tiles_filename)
-    add_key_to_fits(tiles_filename, thread_ids, 'thread_id', 'int')
-else:
-    dat = read_FitsCat(tiles_filename)
-    ntiles, n_threads = len(dat), da.max(dat['thread_id']) 
-    thread_ids = dat['thread_id']
-    
-print ('Ntiles / Nthreads = ', ntiles, ' / ', n_threads)
+    # split_area:
+    if param['input_data_structure'][param['survey']]['footprint_hpx_mosaic']: 
+        survey_footprint = os.path.join(workdir, 'survey_footprint.fits')
+        if not os.path.isfile(survey_footprint):
+            create_survey_footprint_from_mosaic(param['footprint'][param['survey']], survey_footprint)
+    else:
+        survey_footprint = param['footprint'][param['survey']]['survey_footprint']
 
-# prepare dslices 
-compute_dslices(param['isochrone_masks'][param['survey']], param['gawa_cfg']['dslices'], workdir)
+    if not os.path.isfile(tiles_filename):
+        ntiles = hpx_split_survey(survey_footprint, param['footprint'][param['survey']], param['admin']['tiling'], tiles_filename)
+        n_threads, thread_ids = split_equal_area_in_threads(param['admin']['nthreads_max'], tiles_filename)
+        add_key_to_fits(tiles_filename, thread_ids, 'thread_id', 'int')
+    else:
+        dat = read_FitsCat(tiles_filename)
+        ntiles, n_threads = len(dat), da.max(dat['thread_id']) 
+        thread_ids = dat['thread_id']
+        
+    print ('Ntiles / Nthreads = ', ntiles, ' / ', n_threads)
 
-# compute cmd_masks 
-print ('Compute CMD masks')
-compute_cmd_masks(param['isochrone_masks'][param['survey']], param['out_paths'], param['gawa_cfg'])
+    # prepare dslices 
+    compute_dslices(param['isochrone_masks'][param['survey']], param['gawa_cfg']['dslices'], workdir)
 
-with Pool(3) as p:
-    p.map(gawa_thread_call, [(param, i) for i in da.unique(thread_ids).compute()])
-gawa_concatenate(param)
-end = time.time()
-print("elapsed time: " + str(end - start))
-print ('all done folks!')
+    # compute cmd_masks 
+    print ('Compute CMD masks')
+    compute_cmd_masks(param['isochrone_masks'][param['survey']], param['out_paths'], param['gawa_cfg'])
+
+    with Pool(3) as p:
+        p.map(gawa_thread_call, [(param, i) for i in da.unique(thread_ids).compute()])
+    gawa_concatenate(param)
+    end = time.time()
+    print("elapsed time: " + str(end - start))
+    print ('all done folks!')
