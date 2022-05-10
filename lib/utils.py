@@ -1102,7 +1102,7 @@ def cond_in_disc(rag, decg, hpxg, Nside, nest, racen, deccen, rad_deg):
     cond_strict = da.isin(hpxg, pixels_in_disc_strict).compute()
     cond_edge = da.isin(hpxg, pixels_edge).compute()
 
-    dist2cl = np.ones(len(rag)) * 2.0 * rad_deg
+    dist2cl = da.ones(len(rag)).compute() * 2.0 * rad_deg
     dist2cl[cond_strict] = 0.0
     dist2cl[cond_edge] = da.degrees(
         dist_ang(rag[cond_edge], decg[cond_edge], racen, deccen)
