@@ -84,7 +84,7 @@ def read_mosaicFitsCat_in_disc(galcat, tile, radius_deg):
         inclusive=True,
     )
 
-    relevant_fits_pixels = fits_pixels_in_disc[np.isin(fits_pixels_in_disc, hpix_fits)]
+    relevant_fits_pixels = fits_pixels_in_disc[da.isin(fits_pixels_in_disc, hpix_fits).compute()]
 
     if len(relevant_fits_pixels): #Raslan - removed comparation
         # merge intersecting fits
@@ -140,7 +140,7 @@ def read_mosaicFootprint_in_disc(footprint, tile, radius_deg):
         radius=da.radians(radius_deg),
         inclusive=True,
     )
-    relevant_fits_pixels = fits_pixels_in_disc[np.isin(fits_pixels_in_disc, hpix_fits)]
+    relevant_fits_pixels = fits_pixels_in_disc[da.isin(fits_pixels_in_disc, hpix_fits).compute()]
     if len(relevant_fits_pixels) > 0:
         # merge intersecting fits
         for i in range(0, len(relevant_fits_pixels)):
@@ -175,7 +175,7 @@ def read_mosaicFitsCat_in_hpix(galcat, hpix_tile, Nside_tile, nest_tile):
     ra_fits, dec_fits = hpix2radec(hpix_fits, Nside_fits, nest_fits)
     hpix_fits_tile = radec2hpix(ra_fits, dec_fits, Nside_tile, nest_tile)
 
-    relevant_fits_pixels = da.unique(hpix_fits[np.isin(hpix_fits_tile, hpix_tile)]).compute()
+    relevant_fits_pixels = da.unique(hpix_fits[da.isin(hpix_fits_tile, hpix_tile)]).compute()
 
     if len(relevant_fits_pixels): #Raslan - removed comparation
         # merge intersecting fits
