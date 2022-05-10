@@ -13,7 +13,6 @@ if not sys.warnoptions:
 import matplotlib as mpl
 mpl.use('Agg')
 import dask.array as da
-import numpy as np
 import json
 from time import sleep
 from astropy.table import Table

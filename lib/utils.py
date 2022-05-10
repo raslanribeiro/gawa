@@ -175,7 +175,7 @@ def read_mosaicFitsCat_in_hpix(galcat, hpix_tile, Nside_tile, nest_tile):
     ra_fits, dec_fits = hpix2radec(hpix_fits, Nside_fits, nest_fits)
     hpix_fits_tile = radec2hpix(ra_fits, dec_fits, Nside_tile, nest_tile)
 
-    relevant_fits_pixels = np.unique(hpix_fits[np.isin(hpix_fits_tile, hpix_tile)])
+    relevant_fits_pixels = da.unique(hpix_fits[np.isin(hpix_fits_tile, hpix_tile)]).compute()
 
     if len(relevant_fits_pixels): #Raslan - removed comparation
         # merge intersecting fits
