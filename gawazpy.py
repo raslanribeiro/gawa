@@ -140,7 +140,7 @@ print ('Compute CMD masks')
 compute_cmd_masks(param['isochrone_masks'][param['survey']], param['out_paths'], param['gawa_cfg'])
 
 with Pool(3) as p:
-    p.map(gawa_thread_call, [(param, i) for i in np.unique(thread_ids)])
+    p.map(gawa_thread_call, [(param, i) for i in da.unique(thread_ids).compute()])
 gawa_concatenate(param)
 end = time.time()
 print("elapsed time: " + str(end - start))
