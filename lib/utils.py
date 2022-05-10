@@ -218,7 +218,7 @@ def read_mosaicFootprint_in_hpix(footprint, hpix_tile, Nside_tile, nest_tile):
     ra_fits, dec_fits = hpix2radec(hpix_fits, Nside_fits, nest_fits)
     hpix_fits_tile = radec2hpix(ra_fits, dec_fits, Nside_tile, nest_tile)
 
-    relevant_fits_pixels = np.unique(hpix_fits[np.isin(hpix_fits_tile, hpix_tile)])
+    relevant_fits_pixels = np.unique(hpix_fits[da.isin(hpix_fits_tile, hpix_tile).compute()])
 
     if len(relevant_fits_pixels): #Raslan - removed comparation
         # merge intersecting fits
@@ -609,7 +609,7 @@ def all_hpx_in_annulus(ra, dec, radius_in_deg, radius_out_deg, hpx_meta, inclusi
             inclusive=inclusive,
         )
 
-        id_annulus = np.isin(pixels_in_disc, pixels_in_disc_in, invert=True)
+        id_annulus = da.isin(pixels_in_disc, pixels_in_disc_in, invert=True).compute()
         pixels_in_ann = pixels_in_disc[id_annulus]
     else:
         pixels_in_ann = np.copy(pixels_in_disc)
@@ -640,7 +640,7 @@ def hpx_in_annulus(
     hpx_in_ann, frac_in_ann = [], []
 
     if npix_all: #Raslan - Faster than comparation
-        idx = np.isin(hpix, pixels_in_ann)
+        idx = da.isin(hpix, pixels_in_ann).compute()
         hpx_in_ann = hpix[idx]  # visible pixels
         frac_in_ann = frac[idx]
         npix = len(hpx_in_ann)
@@ -1098,9 +1098,9 @@ def cond_in_disc(rag, decg, hpxg, Nside, nest, racen, deccen, rad_deg):
         inclusive=True,
     )
 
-    pixels_edge = pixels_in_disc[np.isin(pixels_in_disc, pixels_in_disc_strict)]
-    cond_strict = np.isin(hpxg, pixels_in_disc_strict)
-    cond_edge = np.isin(hpxg, pixels_edge)
+    pixels_edge = pixels_in_disc[da.isin(pixels_in_disc, pixels_in_disc_strict).compute()]
+    cond_strict = da.isin(hpxg, pixels_in_disc_strict).compute()
+    cond_edge = da.isin(hpxg, pixels_edge).compute()
 
     dist2cl = np.ones(len(rag)) * 2.0 * rad_deg
     dist2cl[cond_strict] = 0.0
@@ -1132,7 +1132,7 @@ def cond_in_hpx_disc(hpxg, Nside, nest, racen, deccen, rad_deg):
         inclusive=False,
     )
 
-    cond_strict = np.isin(hpxg, pixels_in_disc_strict)
+    cond_strict = da.isin(hpxg, pixels_in_disc_strict).compute()
     return cond_strict
 
 
