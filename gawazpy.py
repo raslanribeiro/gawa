@@ -14,7 +14,6 @@ import matplotlib as mpl
 mpl.use('Agg')
 import dask.array as da
 import json
-from time import sleep
 from astropy.table import Table
 
 from lib.multithread import split_equal_area_in_threads
