@@ -800,7 +800,7 @@ def split_survey_from_hpx(
             k += 1
 
     nxmax = np.amax(nx)
-    ntiles = np.sum(nx)
+    ntiles = da.sum(nx).compute()
     tile_id = np.arange(0, ntiles, 1).astype(int)
     size_frame_ra = (size_ra + 2.0 * tile_overlap) * cdec_frame / cdec
     size_frame_dec = size_dec + 2.0 * tile_overlap
