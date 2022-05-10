@@ -493,7 +493,7 @@ def radec_window_area(ramin, ramax, decmin, decmax):
     decmaxi = decmini + step
     decceni = (decmini + decmaxi) / 2.0
     darea = (ramax - ramin) * da.cos(np.pi * decceni / 180.0) * (decmaxi - decmini)
-    return np.sum(darea)
+    return da.sum(darea).compute()
 
 
 # healpix functions
