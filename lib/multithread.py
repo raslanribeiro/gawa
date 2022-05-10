@@ -1,5 +1,5 @@
 import numpy as np
-
+import dask.array as da
 # import astropy.io.fits as fits
 # import os
 from lib.utils import read_FitsCat
@@ -24,7 +24,8 @@ def split_equal_nr_of_tiles_in_threads(n_threads, ntiles):
         thread_ids = np.arange(0, ntiles)
 
     if ntiles > n_threads:
-        thread_ids = np.zeros(ntiles)
+        thread_ids = da.zeros(ntiles).compute()
+        assert thread_ids.flags.writeable == True
 
         p = float(ntiles) / float(n_threads)
 
