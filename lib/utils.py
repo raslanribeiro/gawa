@@ -645,8 +645,8 @@ def hpx_in_annulus(
         frac_in_ann = frac[idx]
         npix = len(hpx_in_ann)
         if npix > 0:
-            area_deg2 = np.sum(frac_in_ann) * area_pix
-            coverfrac = np.sum(frac_in_ann) / float(npix_all)
+            area_deg2 = da.sum(frac_in_ann).compute() * area_pix
+            coverfrac = da.sum(frac_in_ann).compute() / float(npix_all)
     # print ('nnn ', npix_all, np.sum(frac_in_ann), Nside, radius_out_deg)
 
     return hpx_in_ann, frac_in_ann, area_deg2, coverfrac
