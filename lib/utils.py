@@ -47,7 +47,7 @@ def read_FitsFootprint(hpx_footprint, hpx_meta):
     hdulist.close()
     hpix_map = dat[hpx_meta["key_pixel"]].astype(int)
     if hpx_meta["key_frac"] == "none":
-        frac_map = np.ones(len(hpix_map)).astype(float)
+        frac_map = da.ones(len(hpix_map)).compute().astype(float)
     else:
         frac_map = dat[hpx_meta["key_frac"]]
     return hpix_map, frac_map
