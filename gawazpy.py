@@ -1,3 +1,4 @@
+from dask.distributed import Client, progress, LocalCluster
 import os
 import sys
 import time
@@ -139,8 +140,15 @@ if __name__ =="__main__":
     print ('Compute CMD masks')
     compute_cmd_masks(param['isochrone_masks'][param['survey']], param['out_paths'], param['gawa_cfg'])
 
-    with Pool(3) as p:
-        p.map(gawa_thread_call, [(param, i) for i in da.unique(thread_ids).compute()])
+    # with Pool(1) as p:
+    #     p.map(gawa_thread_call, [(param, i) for i in da.unique(thread_ids).compute()])
+    
+    with LocalCluster(processes=False, threads_per_worker=1,
+                n_workers=1, memory_limit='20GB') as cluster:
+        with Client(cluster) as client:
+            futures = client.map(gawa_thread_call, [(param, i) for i in da.unique(thread_ids).compute()])
+            for future in futures:
+                progress(future)
     gawa_concatenate(param)
     end = time.time()
     print("elapsed time: " + str(end - start))
